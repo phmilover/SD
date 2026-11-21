@@ -1,0 +1,647 @@
+{
+  "info": {
+    "name": "ВышBuild",
+    "description": "Все ключевые API через API Gateway. Запуск по порядку: Runner или `newman run postman/VyshBuild.postman_collection.json --working-dir .` из папки SD3.\nПервый запрос создаёт новое задание `dz-3-<время>`, поэтому коллекцию можно гонять повторно на тех же данных.\nВ Postman укажите рабочую папку SD3 (Settings → Working directory), чтобы нашлись файлы из samples/.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "assignmentId",
+      "value": "dz-3"
+    },
+    {
+      "key": "goodId",
+      "value": ""
+    },
+    {
+      "key": "emptyId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Студент: сдача работы",
+      "item": [
+        {
+          "name": "Сдать рабочий Python-проект",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/good-python.zip`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Иванов Иван",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/good-python.zip"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Своё задание на каждый прогон: повторный запуск не смешивается с прошлыми сдачами.",
+                  "pm.collectionVariables.set('assignmentId', 'dz-3-' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report SUCCESS', () => pm.expect(body.report.status).to.eql('SUCCESS'));",
+                  "pm.collectionVariables.set('goodId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сдать пустой файл",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/empty.zip`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Петров Пётр",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/empty.zip"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report FAILED', () => pm.expect(body.report.status).to.eql('FAILED'));",
+                  "pm.collectionVariables.set('emptyId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сдать проект с синтаксической ошибкой",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/syntax-error.zip`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Сидорова Анна",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/syntax-error.zip"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report FAILED', () => pm.expect(body.report.status).to.eql('FAILED'));",
+                  "pm.collectionVariables.set('syntaxId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сдать архив из одного README",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/readme-only.zip`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Кузнецов Олег",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/readme-only.zip"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report FAILED', () => pm.expect(body.report.status).to.eql('FAILED'));",
+                  "pm.collectionVariables.set('readmeId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сдать один файл Java",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/Main.java`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Смирнова Мария",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/Main.java"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report SUCCESS', () => pm.expect(body.report.status).to.eql('SUCCESS'));",
+                  "pm.collectionVariables.set('javaId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Повторная сдача: Петров исправился",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "Сценарий сдачи: Gateway → Store → Analyze. Файл `samples/good-python.zip`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Петров Пётр",
+                  "type": "text"
+                },
+                {
+                  "key": "assignment_id",
+                  "value": "{{assignmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "samples/good-python.zip"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('report SUCCESS', () => pm.expect(body.report.status).to.eql('SUCCESS'));",
+                  "pm.collectionVariables.set('retryId', body.submission.submission_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сдача без файла → 422",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "student",
+                  "value": "Без файла",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('422', () => pm.response.to.have.status(422));",
+                  "pm.test('ошибка от gateway', () => pm.expect(pm.response.json().service).to.eql('API Gateway'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Сдача и отчёт",
+      "item": [
+        {
+          "name": "Сдача с отчётом",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions/{{goodId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions",
+                "{{goodId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('success', () => pm.expect(pm.response.json().report.success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Перезапустить анализ",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions/{{emptyId}}/analyze",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions",
+                "{{emptyId}}",
+                "analyze"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('по-прежнему FAILED', () => pm.expect(pm.response.json().status).to.eql('FAILED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Неизвестная сдача → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions/00000000000000000000000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions",
+                "00000000000000000000000000000000"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('понятная ошибка', () => pm.expect(pm.response.json().service).to.eql('File Storing Service'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Скачать файл сдачи",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions/{{goodId}}/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions",
+                "{{goodId}}",
+                "file"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Преподаватель: аналитика",
+      "item": [
+        {
+          "name": "Сводка по заданию (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/{{assignmentId}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "{{assignmentId}}",
+                "reports"
+              ]
+            },
+            "description": "5 студентов, у Петрова две попытки: в счётчиках учитывается последняя."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test('5 студентов', () => pm.expect(s.students).to.eql(5));",
+                  "pm.test('считается последняя попытка Петрова', () => {",
+                  "  const petrov = s.submissions.filter(r => r.submission.student === 'Петров Пётр');",
+                  "  pm.expect(petrov.map(r => r.is_latest)).to.eql([false, true]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Сводка по заданию (HTML)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/{{assignmentId}}/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "{{assignmentId}}",
+                "dashboard"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTML', () => pm.expect(pm.response.text()).to.include('Задание'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Карточка билда (HTML)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/submissions/{{syntaxId}}/card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "submissions",
+                "{{syntaxId}}",
+                "card"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTML', () => pm.expect(pm.response.text()).to.include('Python компилируется'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Служебное",
+      "item": [
+        {
+          "name": "Состояние сервисов",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Остановите сервис (`docker compose stop analysis`) и повторите: в ответе будет `analysis: unavailable`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
