@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}ВышBuild · {{ summary.assignment_id }}{% endblock %}
+{% block content %}
+<h1>Задание {{ summary.assignment_id }}</h1>
+<div class="muted">«Если зелёное — можно спать». Счётчики — по последней попытке каждого студента.</div>
+
+<div class="panel stats">
+  <div class="stat"><b>{{ summary.students }}</b><span class="muted">студентов сдали</span></div>
+  <div class="stat"><b style="color: var(--ok)">{{ summary.passed }}</b><span class="muted">зелёный билд</span></div>
+  <div class="stat"><b style="color: var(--bad)">{{ summary.failed }}</b><span class="muted">красный билд</span></div>
+  <div class="stat"><b>{{ summary.not_analyzed }}</b><span class="muted">без отчёта</span></div>
+</div>
+
+<div class="panel">
+  {% if summary.submissions %}
+  <table>
+    <tr><th>Студент</th><th>Сдано (UTC)</th><th>Файл</th><th>Статус</th><th>Причина</th></tr>
+    {% for row in summary.submissions | reverse %}
+    {% set s = row.submission %}
+    <tr class="{{ '' if row.is_latest else 'old' }}">
+      <td>{{ s.student }}{% if not row.is_latest %} <span class="muted">(старая попытка)</span>{% endif %}</td>
+      <td>{{ s.submitted_at.strftime("%d.%m %H:%M:%S") }}</td>
+      <td><a href="/submissions/{{ s.submission_id }}/file">{{ s.filename }}</a></td>
+      <td>
+        <a href="/submissions/{{ s.submission_id }}/card">
+        {% if row.report %}<span class="badge {{ row.report.status }}">{{ row.report.status }}</span>
+        {% else %}<span class="badge none">нет отчёта</span>{% endif %}
+        </a>
+      </td>
+      <td>
+        {% if row.report %}
+          {% for c in row.report.checks if c.status == "failed" %}{{ c.message }}{% if not loop.last %}; {% endif %}{% else %}—{% endfor %}
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">По этому заданию пока нет сдач.</p>
+  {% endif %}
+</div>
+{% endblock %}
