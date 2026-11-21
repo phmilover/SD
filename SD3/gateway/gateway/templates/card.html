@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set s = result.submission %}
+{% set r = result.report %}
+{% block title %}ВышBuild · {{ s.student }}{% endblock %}
+{% block content %}
+<h1>
+  Билд: {{ s.student }}
+  {% if r %}<span class="badge {{ r.status }}">{{ r.status }}</span>{% else %}<span class="badge none">нет отчёта</span>{% endif %}
+</h1>
+<div class="muted">
+  Задание <a href="/assignments/{{ s.assignment_id }}/dashboard">{{ s.assignment_id }}</a> ·
+  <a href="/submissions/{{ s.submission_id }}/file">{{ s.filename }}</a> ({{ s.size_bytes }} Б) ·
+  сдано {{ s.submitted_at.strftime("%d.%m.%Y %H:%M:%S") }} UTC
+</div>
+
+<div class="panel">
+  {% if r %}
+  <p class="muted">Язык: {{ r.language or "не определён" }} · проверено {{ r.analyzed_at.strftime("%d.%m.%Y %H:%M:%S") }} UTC</p>
+  <table>
+    <tr><th>Проверка</th><th>Результат</th><th>Подробности</th></tr>
+    {% for c in r.checks %}
+    <tr><td>{{ c.title }}</td><td><span class="badge {{ c.status }}">{{ c.status }}</span></td><td>{{ c.message }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>Отчёта пока нет{% if result.analysis_error %}: {{ result.analysis_error.message }}{% endif %}.</p>
+  <p class="muted">Перезапустить анализ: <code>POST /submissions/{{ s.submission_id }}/analyze</code></p>
+  {% endif %}
+</div>
+<p class="muted"><code>sha256 {{ s.sha256 }}</code></p>
+{% endblock %}

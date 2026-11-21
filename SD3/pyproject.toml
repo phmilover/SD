@@ -1,0 +1,50 @@
+# Только инструменты разработки: тесты и стиль для всех трёх сервисов.
+# Зависимости самих сервисов — в их requirements.txt, каждый собирается в свой образ.
+[project]
+name = "vyshbuild"
+version = "1.0.0"
+description = "ВышBuild — проверка сдач домашних работ «на сборку» (КПО, ДЗ №3: микросервисы)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.165.0",
+    "uvicorn==0.54.0",
+    "httpx==0.28.1",
+    "python-multipart==0.0.34",
+    "jinja2==3.1.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+]
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["storage", "analysis", "gateway", "."]
+addopts = "-q"
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient`",
+    "ignore:You should not use the 'timeout' argument with the TestClient",
+]
+
+[tool.coverage.run]
+source = ["storage_service", "analysis_service", "gateway"]
+omit = ["*/main.py"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # кириллица в строках и комментариях — это нормально

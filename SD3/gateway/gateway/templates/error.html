@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}ВышBuild · ошибка{% endblock %}
+{% block content %}
+<h1>Не получилось</h1>
+<div class="panel">
+  <p><span class="badge FAILED">{{ error.error }}</span> {{ error.service }}</p>
+  <p>{{ error.message }}</p>
+</div>
+{% endblock %}

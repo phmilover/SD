@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ВышBuild{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #6b7280; --line: #e5e7eb;
+      --ok: #15803d; --ok-bg: #dcfce7; --bad: #b91c1c; --bad-bg: #fee2e2;
+      --warn: #a16207; --warn-bg: #fef9c3; --skip: #6b7280; --skip-bg: #f3f4f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111318; --card: #1b1e25; --text: #e6e8ee; --muted: #9aa1ad; --line: #2c313b;
+        --ok: #4ade80; --ok-bg: #14321f; --bad: #f87171; --bad-bg: #3a1818;
+        --warn: #facc15; --warn-bg: #3a3212; --skip: #9aa1ad; --skip-bg: #262a33;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--text);
+           font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    .muted { color: var(--muted); }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+             padding: 16px 20px; margin-top: 16px; overflow-x: auto; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .stat b { display: block; font-size: 28px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .SUCCESS, .passed { color: var(--ok); background: var(--ok-bg); }
+    .FAILED, .failed { color: var(--bad); background: var(--bad-bg); }
+    .warning { color: var(--warn); background: var(--warn-bg); }
+    .skipped, .none { color: var(--skip); background: var(--skip-bg); }
+    .old td { opacity: .55; }
+    a { color: inherit; }
+    code { font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>
