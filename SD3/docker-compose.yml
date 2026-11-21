@@ -1,0 +1,48 @@
+name: vyshbuild
+
+# Наружу открыт только gateway: клиент не может обойти сценарий «сохранить → проверить».
+# Swagger внутренних сервисов для демонстрации: docker compose -f docker-compose.yml -f docker-compose.debug.yml up
+
+services:
+  storage:
+    build: ./storage
+    environment:
+      DATA_DIR: /data
+      MAX_FILE_MB: "20"
+    volumes:
+      - storage-data:/data
+    restart: unless-stopped
+
+  analysis:
+    build: ./analysis
+    environment:
+      DATA_DIR: /data
+      STORAGE_URL: http://storage:8001
+      HTTP_TIMEOUT_SECONDS: "5"
+    volumes:
+      - analysis-data:/data
+    depends_on:
+      storage:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    build: ./gateway
+    environment:
+      STORAGE_URL: http://storage:8001
+      ANALYSIS_URL: http://analysis:8002
+      HTTP_TIMEOUT_SECONDS: "10"
+      MAX_FILE_MB: "20"
+    ports:
+      - "8000:8000"
+    depends_on:
+      storage:
+        condition: service_healthy
+      analysis:
+        condition: service_healthy
+    restart: unless-stopped
+
+# У каждого сервиса свой том: общих данных и общей БД нет.
+volumes:
+  storage-data:
+  analysis-data:
